@@ -8,7 +8,7 @@ from ...product import models
 from ..core.mutations import (
     BaseMutation, ModelDeleteMutation, ModelFormMutation,
     ModelFormUpdateMutation, StaffMemberRequiredMixin)
-from ..utils import get_attributes_dict_from_list, get_node
+from ..utils import get_attributes_dict_from_list, get_node, get_nodes
 from .forms import CollectionForm, ProductForm, ProductVariantForm
 from .types import Category, Collection, Product, ProductAttribute, ProductType
 
@@ -77,14 +77,14 @@ class CollectionCreateMutation(StaffMemberRequiredMixin, ModelFormMutation):
         return kwargs
 
 
-class CollectionUpdate(
-    StaffMemberRequiredMixin, ModelFormUpdateMutation):
+class CollectionUpdate(StaffMemberRequiredMixin, ModelFormUpdateMutation):
     permissions = 'collection.edit_collection'
 
     class Meta:
         description = 'Updates an existing collection.'
         form_class = CollectionForm
         exclude = ['products']
+
 
 class CollectionDelete(StaffMemberRequiredMixin, ModelDeleteMutation):
     permissions = 'collection.edit_collection'
@@ -97,16 +97,46 @@ class CollectionDelete(StaffMemberRequiredMixin, ModelDeleteMutation):
 class CollectionAddProducts(BaseMutation):
     class Arguments:
         collection_id = graphene.Argument(
-            graphene.ID, description='ID of an product.')
-        products = graphene.List(graphene.ID)
+            graphene.ID, description='ID of a collection.')
+        products = graphene.List(
+            graphene.ID, description='List of product IDs.')
+
+    collection = graphene.Field(
+        Collection,
+        description='Collection to which products will be added.')
 
     class Meta:
-        description = 'Adds product to the collection.'
+        description = 'Adds products to the collection.'
 
     @permission_required('collection.edit_collection')
-    def mutate(self, info, collection_id, products, **kwargs):
-        collection_id = get_node(info, collection_id, only_type=Collection)
-        # products =
+    def mutate(self, info, collection_id, products):
+        collection = get_node(info, collection_id, only_type=Collection)
+        products = get_nodes(products, Product)
+        collection.products.add(*products)
+        return CollectionAddProducts(collection=collection)
+
+
+class CollectionRemoveProducts(BaseMutation):
+    class Arguments:
+        collection_id = graphene.Argument(
+            graphene.ID, description='ID of a collection.')
+        products = graphene.List(
+            graphene.ID, description='List of product IDs.')
+
+    collection = graphene.Field(
+        Collection,
+        description='Collection from which products will be removed.')
+
+    class Meta:
+        description = 'Remove products from the collection.'
+
+    @permission_required('collection.edit_collection')
+    def mutate(self, info, collection_id, products):
+        collection = get_node(info, collection_id, only_type=Collection)
+        products = get_nodes(products, Product)
+        collection.products.remove(*products)
+        return CollectionRemoveProducts(collection=collection)
+
 
 class AttributeValueInput(InputObjectType):
     slug = graphene.String(required=True)

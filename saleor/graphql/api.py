@@ -14,11 +14,12 @@ from .page.mutations import PageCreate, PageDelete, PageUpdate
 from .product.filters import ProductFilterSet
 from .product.mutations import (
     CategoryCreateMutation, CategoryDelete, CategoryUpdateMutation,
-    CollectionCreateMutation, CollectionUpdate,
-    ProductCreateMutation, ProductDeleteMutation, ProductUpdateMutation,
-    ProductTypeCreateMutation, ProductTypeDeleteMutation,
-    ProductTypeUpdateMutation, ProductVariantCreateMutation,
-    ProductVariantDeleteMutation, ProductVariantUpdateMutation)
+    CollectionAddProducts, CollectionCreateMutation, CollectionDelete,
+    CollectionRemoveProducts, CollectionUpdate, ProductCreateMutation,
+    ProductDeleteMutation, ProductUpdateMutation, ProductTypeCreateMutation,
+    ProductTypeDeleteMutation, ProductTypeUpdateMutation,
+    ProductVariantCreateMutation, ProductVariantDeleteMutation,
+    ProductVariantUpdateMutation)
 from .product.resolvers import (
     resolve_attributes, resolve_categories, resolve_collections,
     resolve_products, resolve_product_types)
@@ -124,6 +125,9 @@ class Mutations(graphene.ObjectType):
 
     collection_create = CollectionCreateMutation.Field()
     collection_update = CollectionUpdate.Field()
+    collection_delete = CollectionDelete.Field()
+    collection_add_products = CollectionAddProducts.Field()
+    collection_remove_products = CollectionRemoveProducts.Field()
 
     page_create = PageCreate.Field()
     page_delete = PageDelete.Field()
